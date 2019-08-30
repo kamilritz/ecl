@@ -265,7 +265,7 @@ public:
 	void set_min_required_gps_health_time(uint32_t time_us) { _min_gps_health_time_us = time_us; }
 
 private:
-
+        bool only_reset_vision_once{0};
 	static constexpr uint8_t _k_num_states{24};		///< number of EKF states
 
 	struct {

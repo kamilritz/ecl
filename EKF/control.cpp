@@ -173,10 +173,11 @@ void Ekf::controlExternalVisionFusion()
 		}
 
 		// reset external vision rotation matrix independent if is actually used for debugging purposes
-		if ((_time_last_imu - _time_last_ext_vision) < (2 * EV_MAX_INTERVAL)
+                if ((_time_last_imu - _time_last_ext_vision) < (2 * EV_MAX_INTERVAL) && only_reset_vision_once == false
 			&& (_params.fusion_mode & MASK_ROTATE_EV) && !(_params.fusion_mode & MASK_USE_EVYAW)){
 			// Reset transformation between EV and EKF navigation frames
 			resetExtVisRotMat();
+                        only_reset_vision_once = true;
 		}
 
 		// external vision position aiding selection logic
