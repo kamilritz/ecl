@@ -1673,6 +1673,7 @@ void Ekf::controlVelPosFusion()
 	if (!_control_status.flags.gps &&
 	    !_control_status.flags.opt_flow &&
 	    !_control_status.flags.ev_pos &&
+            !_control_status.flags.ev_vel &&
 	    !(_control_status.flags.fuse_aspd && _control_status.flags.fuse_beta)) {
 
 		// We now need to use a synthetic position observation to prevent unconstrained drift of the INS states.
