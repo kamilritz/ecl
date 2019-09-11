@@ -355,7 +355,10 @@ void Ekf::controlExternalVisionFusion()
 
 			// innovation gate size
 			_posInnovGateNE = fmaxf(_params.ev_innov_gate, 1.0f);
-		}
+                }else{
+                    _vel_pos_innov[3] = 0.0f;
+                    _vel_pos_innov[4] = 0.0f;
+                }
 
 		// determine if we should use the velocity observations
 		if (_control_status.flags.ev_vel) {
