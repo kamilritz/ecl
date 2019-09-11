@@ -181,19 +181,20 @@ void Ekf::controlExternalVisionFusion()
 		}
 
 		// external vision position aiding selection logic
+                // TODO: fix this if statement such that it also contains flags.ev_vel
 		if (!_control_status.flags.ev_pos && _control_status.flags.tilt_align
 		    && _control_status.flags.yaw_align) {
 
 			// check for a external vision measurement that has fallen behind the fusion time horizon
 			if ((_time_last_imu - _time_last_ext_vision) < (2 * EV_MAX_INTERVAL)) {
 				// turn on use of external vision measurements for position
-				if (_params.fusion_mode & MASK_USE_EVPOS) {
+                                if (_params.fusion_mode & MASK_USE_EVPOS && !_control_status.flags.ev_pos) {
 					_control_status.flags.ev_pos = true;
 					ECL_INFO("EKF commencing external vision position fusion");
 				}
 
 				// turn on use of external vision measurements for velocity
-				if (_params.fusion_mode & MASK_USE_EVVEL) {
+                                if (_params.fusion_mode & MASK_USE_EVVEL && !_control_status.flags.ev_vel) {
 					_control_status.flags.ev_vel = true;
 					ECL_INFO("EKF commencing external vision velocity fusion");
 				}
