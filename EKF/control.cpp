@@ -359,15 +359,14 @@ void Ekf::controlExternalVisionFusion()
 
 		// determine if we should use the velocity observations
 		if (_control_status.flags.ev_vel) {
-			_fuse_hor_vel = true;
-			_fuse_vert_vel = true;
+                        _fuse_hor_vel = true;
+                        _fuse_vert_vel = true;
+
+                        Vector3f velNED_aligned{_ev_sample_delayed.velNED};
 
 			// rotate measurement into correct earth frame if required
 			if (_params.fusion_mode & MASK_ROTATE_EV) {
-				Vector3f velNED_rotated = _ev_rot_mat * _ev_sample_delayed.velNED;
-				_vel_pos_innov[0] = _state.vel(0) - velNED_rotated(0);
-				_vel_pos_innov[1] = _state.vel(1) - velNED_rotated(1);
-				_vel_pos_innov[2] = _state.vel(2) - velNED_rotated(0);
+                                velNED_aligned = _ev_rot_mat * _ev_sample_delayed.velNED;
 			}
 
 			// correct velocity for offset relative to IMU
@@ -375,7 +374,11 @@ void Ekf::controlExternalVisionFusion()
 			Vector3f pos_offset_body = _params.ev_pos_body - _params.imu_pos_body;
 			Vector3f vel_offset_body = cross_product(ang_rate, pos_offset_body);
 			Vector3f vel_offset_earth = _R_to_earth * vel_offset_body;
-			_ev_sample_delayed.velNED -= vel_offset_earth;
+                        velNED_aligned -= vel_offset_earth;
+
+                        _vel_pos_innov[0] = _state.vel(0) - velNED_aligned(0);
+                        _vel_pos_innov[1] = _state.vel(1) - velNED_aligned(1);
+                        _vel_pos_innov[2] = _state.vel(2) - velNED_aligned(2);
 
 			// check if we have been deadreckoning too long
 			if ((_time_last_imu - _time_last_vel_fuse) > _params.reset_timeout_max) {
