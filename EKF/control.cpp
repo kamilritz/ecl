@@ -172,48 +172,31 @@ void Ekf::controlExternalVisionFusion()
 			calcExtVisRotMat();
 		}
 
-		// reset external vision rotation matrix independent if is actually used for debugging purposes
-                if ((_time_last_imu - _time_last_ext_vision) < (2 * EV_MAX_INTERVAL) && only_reset_vision_once == false
-			&& (_params.fusion_mode & MASK_ROTATE_EV) && !(_params.fusion_mode & MASK_USE_EVYAW)){
-			// Reset transformation between EV and EKF navigation frames
-			resetExtVisRotMat();
-                        only_reset_vision_once = true;
-		}
-
-		// external vision position aiding selection logic
-                // TODO: fix this if statement such that it also contains flags.ev_vel
-		if (!_control_status.flags.ev_pos && _control_status.flags.tilt_align
-		    && _control_status.flags.yaw_align) {
+                // external vision aiding selection logic
+                if (_control_status.flags.tilt_align && _control_status.flags.yaw_align) {
 
 			// check for a external vision measurement that has fallen behind the fusion time horizon
 			if ((_time_last_imu - _time_last_ext_vision) < (2 * EV_MAX_INTERVAL)) {
 				// turn on use of external vision measurements for position
                                 if (_params.fusion_mode & MASK_USE_EVPOS && !_control_status.flags.ev_pos) {
 					_control_status.flags.ev_pos = true;
+                                        resetPosition();
 					ECL_INFO("EKF commencing external vision position fusion");
 				}
 
 				// turn on use of external vision measurements for velocity
                                 if (_params.fusion_mode & MASK_USE_EVVEL && !_control_status.flags.ev_vel) {
 					_control_status.flags.ev_vel = true;
+                                        resetVelocity();
 					ECL_INFO("EKF commencing external vision velocity fusion");
 				}
 
-				if ((_params.fusion_mode & MASK_ROTATE_EV) && !(_params.fusion_mode & MASK_USE_EVYAW))  {
-					// Reset transformation between EV and EKF navigation frames when starting fusion
-					resetExtVisRotMat();
-				}
-
-				// reset the position if we are not already aiding using GPS, else use a relative position
-				// method for fusing the position data
-				if (_control_status.flags.gps) {
-					_fuse_hpos_as_odom = true;
-
-				} else {
-					resetPosition();
-					resetVelocity();
-
-				}
+                                if ((_params.fusion_mode & MASK_ROTATE_EV) && !(_params.fusion_mode & MASK_USE_EVYAW)
+                                        && !only_reset_vision_once)  {
+                                        // Reset transformation between EV and EKF navigation frames when starting fusion
+                                        resetExtVisRotMat();
+                                        only_reset_vision_once = true;
+                                }
 			}
 		}
 
