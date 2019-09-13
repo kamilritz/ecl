@@ -301,10 +301,8 @@ void Ekf::controlExternalVisionFusion()
 					// calculate the change in position since the last measurement
 					Vector3f ev_delta_pos = _ev_sample_delayed.posNED - _pos_meas_prev;
 
-					// rotate measurement into body frame if required
-					if (_params.fusion_mode & MASK_ROTATE_EV) {
-						ev_delta_pos = _ev_rot_mat * ev_delta_pos;
-					}
+                                        // rotate measurement into body frame is required when fusing with GPS
+                                        ev_delta_pos = _ev_rot_mat * ev_delta_pos;
 
 					// use the change in position since the last measurement
 					_vel_pos_innov[3] = _state.pos(0) - _hpos_pred_prev(0) - ev_delta_pos(0);
