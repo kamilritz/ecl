@@ -341,7 +341,7 @@ void Ekf::controlExternalVisionFusion()
 			_posObsNoiseNE = fmaxf(_ev_sample_delayed.posErr, 0.01f);
 
 			// innovation gate size
-			_posInnovGateNE = fmaxf(_params.ev_innov_gate, 1.0f);
+                        _posInnovGateNE = fmaxf(_params.ev_pos_innov_gate, 1.0f);
                 }else{
                     _vel_pos_innov[3] = 0.0f;
                     _vel_pos_innov[4] = 0.0f;
@@ -382,7 +382,7 @@ void Ekf::controlExternalVisionFusion()
 			_velObsVarNED(2) = _velObsVarNED(1) = _velObsVarNED(0) = fmaxf(_ev_sample_delayed.velErr, 0.01f);
 
 			// innovation gate size
-			_vvelInnovGate = _hvelInnovGate = fmaxf(_params.ev_innov_gate, 1.0f);
+                        _vvelInnovGate = _hvelInnovGate = fmaxf(_params.ev_vel_innov_gate, 1.0f);
 		}
 
 		// Fuse available NED position data into the main filter

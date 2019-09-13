@@ -299,7 +299,9 @@ struct parameters {
 	float range_stuck_threshold{0.1f};	///< minimum variation in range finder reading required to declare a range finder 'unstuck' when readings recommence after being out of range (m)
 
 	// vision position fusion
-	float ev_innov_gate{5.0f};		///< vision estimator fusion innovation consistency gate size (STD)
+        float ev_innov_gate{5.0f};		///< vision estimator fusion innovation consistency gate size (STD)
+        float ev_vel_innov_gate{2.0f};		///< vision velocity fusion innovation consistency gate size (STD)
+        float ev_pos_innov_gate{5.0f};		///< vision position fusion innovation consistency gate size (STD)
 
 	// optical flow fusion
 	float flow_noise{0.15f};		///< observation noise for optical flow LOS rate measurements (rad/sec)
