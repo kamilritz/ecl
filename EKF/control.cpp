@@ -284,7 +284,7 @@ void Ekf::controlExternalVisionFusion()
 			_ev_sample_delayed.posNED(2) -= pos_offset_earth(2);
 
 			// Use an incremental position fusion method for EV data if using GPS or if the observations are not in NED
-			if (_control_status.flags.gps || (_params.fusion_mode & MASK_ROTATE_EV)) {
+                        if (_control_status.flags.gps) {
 				_fuse_hpos_as_odom = true;
 
 			} else {
@@ -319,8 +319,12 @@ void Ekf::controlExternalVisionFusion()
 
 			} else {
 				// use the absolute position
-				_vel_pos_innov[3] = _state.pos(0) - _ev_sample_delayed.posNED(0);
-				_vel_pos_innov[4] = _state.pos(1) - _ev_sample_delayed.posNED(1);
+                                Vector3f ev_pos_meas = _ev_sample_delayed.posNED;
+                                if (_params.fusion_mode & MASK_ROTATE_EV) {
+                                        ev_pos_meas = _ev_rot_mat * ev_pos_meas;
+                                }
+                                _vel_pos_innov[3] = _state.pos(0) - ev_pos_meas(0);
+                                _vel_pos_innov[4] = _state.pos(1) - ev_pos_meas(1);
 
 				// check if we have been deadreckoning too long
 				if ((_time_last_imu - _time_last_pos_fuse) > _params.reset_timeout_max) {
