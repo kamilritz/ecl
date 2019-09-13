@@ -310,6 +310,8 @@ void Ekf::controlExternalVisionFusion()
 					_vel_pos_innov[3] = _state.pos(0) - _hpos_pred_prev(0) - ev_delta_pos(0);
 					_vel_pos_innov[4] = _state.pos(1) - _hpos_pred_prev(1) - ev_delta_pos(1);
 
+                                        // observation 1-STD error, incremental pos observation is expected to have more uncertainty
+                                        _posObsNoiseNE = fmaxf(_ev_sample_delayed.posErr, 0.5f);
 				}
 
 				// record observation and estimate for use next time
@@ -325,6 +327,8 @@ void Ekf::controlExternalVisionFusion()
                                 }
                                 _vel_pos_innov[3] = _state.pos(0) - ev_pos_meas(0);
                                 _vel_pos_innov[4] = _state.pos(1) - ev_pos_meas(1);
+                                // observation 1-STD error
+                                _posObsNoiseNE = fmaxf(_ev_sample_delayed.posErr, 0.01f);
 
 				// check if we have been deadreckoning too long
 				if ((_time_last_imu - _time_last_pos_fuse) > _params.reset_timeout_max) {
@@ -336,9 +340,6 @@ void Ekf::controlExternalVisionFusion()
 					resetPosition();
 				}
 			}
-
-			// observation 1-STD error
-			_posObsNoiseNE = fmaxf(_ev_sample_delayed.posErr, 0.01f);
 
 			// innovation gate size
                         _posInnovGateNE = fmaxf(_params.ev_pos_innov_gate, 1.0f);
