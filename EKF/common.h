@@ -80,13 +80,12 @@ struct flow_message {
 };
 
 struct ext_vision_message {
-	Vector3f pos;	///< XYZ position in earth frame (m) - Z must be aligned with down axis
-	Vector3f vel;	///< XYZ velocity in earth frame (m/sec) - Z must be aligned with down axis
+	Vector3f pos;		///< XYZ position in external vision's local reference frame (m) - Z must be aligned with down axis
+	Vector3f vel;		///< XYZ velocity in external vision's local reference frame (m/sec) - Z must be aligned with down axis
 	Quatf quat;		///< quaternion defining rotation from body to earth frame
-	float posErr;		///< 1-Sigma horizontal position accuracy (m)
-	float hgtErr;		///< 1-Sigma height accuracy (m)
-	float velErr;		///< 1-Sigma velocity accuracy (m/sec)
-	float angErr;		///< 1-Sigma angular error (rad)
+	Vector3f posVar;	///< XYZ position variances (m**2)
+	Vector3f velVar;	///< XYZ velocity variances ((m/sec)**2)
+	float angVar;		///< angular heading variance (rad**2)
 };
 
 struct outputSample {
@@ -153,13 +152,12 @@ struct flowSample {
 };
 
 struct extVisionSample {
-	Vector3f pos;	///< XYZ position in earth frame (m) - Z must be aligned with down axis
-	Vector3f vel;	///< XYZ velocity in earth frame (m/sec) - Z must be aligned with down axis
+	Vector3f pos;		///< XYZ position in external vision's local reference frame (m) - Z must be aligned with down axis
+	Vector3f vel;		///< XYZ velocity in external vision's local reference frame (m/sec) - Z must be aligned with down axis
 	Quatf quat;		///< quaternion defining rotation from body to earth frame
-	float posErr;		///< 1-Sigma horizontal position accuracy (m)
-	float hgtErr;		///< 1-Sigma height accuracy (m)
-	float velErr;		///< 1-Sigma velocity accuracy (m/sec)
-	float angErr;		///< 1-Sigma angular error (rad)
+	Vector3f posVar;	///< XYZ position variances (m**2)
+	Vector3f velVar;	///< XYZ velocity variances ((m/sec)**2)
+	float angVar;		///< angular heading variance (rad**2)
 	uint64_t time_us;	///< timestamp of the measurement (uSec)
 };
 
@@ -169,8 +167,8 @@ struct dragSample {
 };
 
 struct auxVelSample {
-	Vector2f velNE;		///< measured NE velocity relative to the local origin (m/sec)
-	Vector2f velVarNE;	///< estimated error variance of the NE velocity (m/sec)**2
+	Vector3f vel;		///< measured NE velocity relative to the local origin (m/sec)
+	Vector3f velVar;	///< estimated error variance of the NE velocity (m/sec)**2
 	uint64_t time_us;	///< timestamp of the measurement (uSec)
 };
 
@@ -194,7 +192,9 @@ struct auxVelSample {
 #define MASK_USE_DRAG  (1<<5)		///< set to true to use the multi-rotor drag model to estimate wind
 #define MASK_ROTATE_EV  (1<<6)		///< set to true to if the EV observations are in a non NED reference frame and need to be rotated before being used
 #define MASK_USE_GPSYAW  (1<<7)		///< set to true to use GPS yaw data if available
-#define MASK_USE_EVVEL  (1<<8)		///< sset to true to use external vision velocity data
+#define MASK_USE_EVVEL  (1<<8)		///< set to true to use external vision velocity data
+#define MASK_USE_AUXVEL  (1<<9)		///< set to true to use external vision velocity data
+
 
 // Integer definitions for mag_fusion_type
 #define MAG_FUSE_TYPE_AUTO      0	///< The selection of either heading or 3D magnetometer fusion will be automatic
@@ -450,8 +450,8 @@ union filter_control_status_u {
 		uint32_t baro_hgt    : 1; ///< 9 - true when baro height is being fused as a primary height reference
 		uint32_t rng_hgt     : 1; ///< 10 - true when range finder height is being fused as a primary height reference
 		uint32_t gps_hgt     : 1; ///< 11 - true when GPS height is being fused as a primary height reference
-		uint32_t ev_pos      : 1; ///< 12 - true when local position data from external vision is being fused
-		uint32_t ev_yaw      : 1; ///< 13 - true when yaw data from external vision measurements is being fused
+		uint32_t ev_pos      : 1; ///< 12 - true when local position data fusion from external vision is intended
+		uint32_t ev_yaw      : 1; ///< 13 - true when yaw data fusion from external vision measurements is intended
 		uint32_t ev_hgt      : 1; ///< 14 - true when height data from external vision measurements is being fused
 		uint32_t fuse_beta   : 1; ///< 15 - true when synthetic sideslip measurements are being fused
 		uint32_t update_mag_states_only   : 1; ///< 16 - true when only the magnetometer states are updated by the magnetometer
@@ -462,12 +462,14 @@ union filter_control_status_u {
 		uint32_t rng_stuck   : 1; ///< 21 - true when rng data wasn't ready for more than 10s and new rng values haven't changed enough
 		uint32_t gps_yaw     : 1; ///< 22 - true when yaw (not ground course) data from a GPS receiver is being fused
 		uint32_t mag_align_complete   : 1; ///< 23 - true when the in-flight mag field alignment has been completed
-		uint32_t ev_vel      : 1; ///< 24 - true when local earth frame velocity data from external vision measurements are being fused
+		uint32_t ev_vel      : 1; ///< 24 - true when local earth frame velocity data fusion from external vision measurements is intended
 		uint32_t synthetic_mag_z : 1; ///< 25 - true when we are using a synthesized measurement for the magnetometer Z component
+		uint32_t aux_vel     : 1; ///< 25 - true when auxiliary horizontal velocity data fusion is intended
 	} flags;
 	uint32_t value;
 };
 
+// Mavlink bitmask containing state of estimator solution
 union ekf_solution_status {
 	struct {
 		uint16_t attitude           : 1; ///< 0 - True if the attitude estimate is good
