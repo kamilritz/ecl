@@ -953,7 +953,7 @@ void Ekf::getMagInnovRatio(float &mag_innov_ratio)
 
 void Ekf::getDragInnov(float drag_innov[2])
 {
-	memcpy(&drag_innov, _drag_innov, sizeof(_drag_innov));
+	memcpy(drag_innov, _drag_innov, sizeof(_drag_innov));
 }
 
 void Ekf::getDragInnovVar(float drag_innov_var[2])

@@ -100,8 +100,8 @@ void Ekf::resetStates()
 {
 	_state.vel.setZero();
 	_state.pos.setZero();
-	_state.gyro_bias.setZero();
-	_state.accel_bias.setZero();
+	_state.delta_ang_bias.setZero();
+	_state.delta_vel_bias.setZero();
 	_state.mag_I.setZero();
 	_state.mag_B.setZero();
 	_state.wind_vel.setZero();
