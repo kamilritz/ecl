@@ -363,7 +363,7 @@ void Ekf::controlExternalVisionFusion()
 			Vector3f vel_offset_earth = _R_to_earth * vel_offset_body;
 			vel_aligned -= vel_offset_earth;
 
-			_ev_vel_innov= _state.vel - vel_aligned;
+			_ev_vel_innov = _state.vel - vel_aligned;
 
 			// check if we have been deadreckoning too long
 			if ((_time_last_imu - _time_last_hor_vel_fuse) > _params.reset_timeout_max) {
