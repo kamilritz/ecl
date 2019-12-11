@@ -75,6 +75,8 @@ bool Ekf::collect_gps(const gps_message &gps)
 
 		// Take the current GPS height and subtract the filter height above origin to estimate the GPS height of the origin
 		_gps_alt_ref = 1e-3f * (float)gps.alt + _state.pos(2);
+		_gps_ref_hgt.reset(_gps_alt_ref, gps.time_usec);
+		_gps_ref_hgt.setStateLimits(_gps_alt_ref - _gps_ref_hgt_range, _gps_alt_ref + _gps_ref_hgt_range);
 		_NED_origin_initialised = true;
 		_last_gps_origin_time_us = _time_last_imu;
 
@@ -89,17 +91,7 @@ bool Ekf::collect_gps(const gps_message &gps)
 		_gps_origin_eph = gps.eph;
 		_gps_origin_epv = gps.epv;
 
-		// if the user has selected GPS as the primary height source, switch across to using it
-		if (_primary_hgt_source == VDIST_SENSOR_GPS) {
-			ECL_INFO_TIMESTAMPED("EKF GPS checks passed (WGS-84 origin set, using GPS height)");
-			_control_status.flags.baro_hgt = false;
-			_control_status.flags.gps_hgt = true;
-			_control_status.flags.rng_hgt = false;
-			// zero the sensor offset
-			_hgt_sensor_offset = 0.0f;
-		} else {
-			ECL_INFO_TIMESTAMPED("EKF GPS checks passed (WGS-84 origin set)");
-		}
+		ECL_INFO_TIMESTAMPED("EKF GPS checks passed");
 	}
 
 	// start collecting GPS if there is a 3D fix and the NED origin has been set

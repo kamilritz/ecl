@@ -45,6 +45,8 @@
 #include "common.h"
 #include "RingBuffer.h"
 #include "AlphaFilter.hpp"
+#include "LowPassFilterWithLimits.h"
+
 
 #include <geo/geo.h>
 #include <matrix/math.hpp>
@@ -482,6 +484,8 @@ protected:
 	// innovation consistency check monitoring ratios
 	float _yaw_test_ratio{};		// yaw innovation consistency check ratio
 	float _mag_test_ratio[3] {};		// magnetometer XYZ innovation consistency check ratios
+	Vector2f _fake_vel_test_ratio {};
+	Vector2f _fake_pos_test_ratio {};
 	Vector2f _gps_vel_test_ratio {};	// GPS velocity innovation consistency check ratios
 	Vector2f _gps_pos_test_ratio {};	// GPS position innovation consistency check ratios
 	Vector2f _ev_vel_test_ratio {};		// EV velocity innovation consistency check ratios
@@ -550,6 +554,11 @@ protected:
 	uint64_t _time_last_optflow{0};
 	uint64_t _time_last_gnd_effect_on{0};	//last time the baro ground effect compensation was turned on externally (uSec)
 	uint64_t _time_last_auxvel{0};
+
+	uint64_t _time_last_gps_fused{0};	// timestamp of last gps measurement that was fused in microseconds
+	uint64_t _time_last_mag_fused{0};	// timestamp of last magnetometer measurement that was fused in microseconds
+	uint64_t _time_last_baro_fused{0};	// timestamp of last barometer measurement that was fused in microseconds
+	uint64_t _time_last_range_fused{0};	// timestamp of last range measurement that was fused in microseconds
 
 	fault_status_u _fault_status{};
 

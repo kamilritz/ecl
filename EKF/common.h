@@ -174,16 +174,16 @@ struct auxVelSample {
 	uint64_t time_us;	///< timestamp of the measurement (uSec)
 };
 
-// Integer definitions for vdist_sensor_type
-#define VDIST_SENSOR_BARO  0	///< Use baro height
-#define VDIST_SENSOR_GPS   1	///< Use GPS height
-#define VDIST_SENSOR_RANGE 2	///< Use range finder height
-#define VDIST_SENSOR_EV    3    ///< Use external vision
-
 // Bit locations for mag_declination_source
 #define MASK_USE_GEO_DECL   (1<<0)  ///< set to true to use the declination from the geo library when the GPS position becomes available, set to false to always use the EKF2_MAG_DECL value
 #define MASK_SAVE_GEO_DECL  (1<<1)  ///< set to true to set the EKF2_MAG_DECL parameter to the value returned by the geo library
 #define MASK_FUSE_DECL      (1<<2)  ///< set to true if the declination is always fused as an observation to constrain drift when 3-axis fusion is performed
+
+// Bit location for fusion_hgt_mode
+#define MASK_HGT_BARO	(1<<0)		///< set to true to use barometer data for height estimation
+#define MASK_HGT_GPS	(1<<1)		///< set to true to use GPS data for height estimation
+#define MASK_HGT_RANGE	(1<<2)		///< set to true to use Range data for height estimation
+#define MASK_HGT_EV	(1<<3)		///< set to true to use external vision data for height estimation
 
 // Bit locations for fusion_mode
 #define MASK_USE_GPS    (1<<0)		///< set to true to use GPS data
@@ -210,6 +210,12 @@ struct auxVelSample {
 #define RNG_MAX_INTERVAL  (uint64_t)2e5	///< Maximum allowable time interval between range finder  measurements (uSec)
 #define EV_MAX_INTERVAL   (uint64_t)2e5	///< Maximum allowable time interval between external vision system measurements (uSec)
 
+// Maximum intervals between sensor fusion event before reseting reference height in  usec
+#define GPS_MAX_FUSION_TIMEOUT  (uint64_t)50e6	///< Maximum allowable time interval between GPS measurement fusions (uSec)
+#define BARO_MAX_FUSION_TIMEOUT (uint64_t)20e6	///< Maximum allowable time interval between pressure altitude fusions (uSec)
+#define RNG_MAX_FUSION_TIMEOUT  (uint64_t)10e6	///< Maximum allowable time interval between range finder measurement fusions (uSec)
+#define EV_MAX_FUSION_TIMEOUT   (uint64_t)10e6	///< Maximum allowable time interval between external vision system measurement fusions (uSec)
+
 // bad accelerometer detection and mitigation
 #define BADACC_PROBATION  (uint64_t)10e6	///< Period of time that accel data declared bad must continuously pass checks to be declared good again (uSec)
 #define BADACC_BIAS_PNOISE	4.9f	///< The delta velocity process noise is set to this when accel data is declared bad (m/sec**2)
@@ -219,8 +225,8 @@ struct auxVelSample {
 
 struct parameters {
 	// measurement source control
-	int32_t fusion_mode{MASK_USE_GPS};		///< bitmasked integer that selects which aiding sources will be used
-	int32_t vdist_sensor_type{VDIST_SENSOR_BARO};	///< selects the primary source for height data
+	int32_t fusion_mode{MASK_USE_GPS};		///< bitmasked integer that selects which horizontal position and velocity aiding sources will be used
+	int32_t fusion_hgt_mode{MASK_HGT_BARO};		///< bitmasked integer that selects whiqch height aiding sources will be used
 	int32_t sensor_interval_min_ms{20};		///< minimum time of arrival difference between non IMU sensor updates. Sets the size of the observation buffers. (mSec)
 
 	// measurement time delays
@@ -287,7 +293,7 @@ struct parameters {
 
 	// range finder fusion
 	float range_noise{0.1f};		///< observation noise for range finder measurements (m)
-	float range_innov_gate{5.0f};		///< range finder fusion innovation consistency gate size (STD)
+	float range_innov_gate{1.0f};		///< range finder fusion innovation consistency gate size (STD)
 	float rng_gnd_clearance{0.1f};		///< minimum valid value for range when on ground (m)
 	float rng_sens_pitch{0.0f};		///< Pitch offset of the range sensor (rad). Sensor points out along Z axis when offset is zero. Positive rotation is RH about Y axis.
 	float range_noise_scaler{0.0f};		///< scaling from range measurement to noise (m/m)
@@ -465,6 +471,7 @@ union filter_control_status_u {
 		uint32_t mag_aligned_in_flight   : 1; ///< 23 - true when the in-flight mag field alignment has been completed
 		uint32_t ev_vel      : 1; ///< 24 - true when local earth frame velocity data from external vision measurements are being fused
 		uint32_t synthetic_mag_z : 1; ///< 25 - true when we are using a synthesized measurement for the magnetometer Z component
+		uint32_t fake_velPos : 1; ///< 26 - true when we fuse fake position and velocity to stabilize estimate
 	} flags;
 	uint32_t value;
 };

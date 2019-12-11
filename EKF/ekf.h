@@ -63,6 +63,12 @@ public:
 	// should be called every time new data is pushed into the filter
 	bool update() override;
 
+	void getFakeVelPosInnov(float hvel[2], float &vvel, float hpos[2], float &vpos);
+
+	void getFakeVelPosInnovVar(float hvel[2], float &vvel, float hpos[2], float &vpos);
+
+	void getFakeVelPosInnovRatio(float& hvel, float &vvel, float& hpos, float &vpos);
+
 	void getGpsVelPosInnov(float hvel[2], float &vvel, float hpos[2], float &vpos) override;
 
 	void getGpsVelPosInnovVar(float hvel[2], float &vvel, float hpos[2], float &vpos) override;
@@ -287,6 +293,14 @@ public:
 	// set minimum continuous period without GPS fail required to mark a healthy GPS status
 	void set_min_required_gps_health_time(uint32_t time_us) { _min_gps_health_time_us = time_us; }
 
+	float getBaroRefHgt();
+
+	float getGpsRefHgt();
+
+	float getRangeRefHgt();
+
+	float getEvRefHgt();
+
 private:
 
 	static constexpr uint8_t _k_num_states{24};		///< number of EKF states
@@ -386,6 +400,11 @@ private:
 	Vector3f _delta_vel_bias_var_accum;		///< kahan summation algorithm accumulator for delta velocity bias variance
 	Vector3f _delta_angle_bias_var_accum;	///< kahan summation algorithm accumulator for delta angle bias variance
 
+	Vector3f _fake_vel_innov;
+	Vector3f _fake_vel_innov_var;
+
+	Vector3f _fake_pos_innov;
+	Vector3f _fake_pos_innov_var;
 
 	Vector3f _gps_vel_innov {};	///< GPS velocity innovations (m/sec)
 	Vector3f _gps_vel_innov_var {};	///< GPS velocity innovation variances ((m/sec)**2)
@@ -461,6 +480,7 @@ private:
 	// Variables used to publish the WGS-84 location of the EKF local NED origin
 	uint64_t _last_gps_origin_time_us{0};	///< time the origin was last set (uSec)
 	float _gps_alt_ref{0.0f};		///< WGS-84 height (m)
+	// TODO: remove this. it is replaced with new filter
 
 	// Variables used to initialise the filter states
 	uint32_t _hgt_counter{0};		///< number of height samples read during initialisation
@@ -470,8 +490,34 @@ private:
 	uint64_t _time_last_mag{0};		///< measurement time of last magnetomter sample (uSec)
 	AlphaFilterVector3f _mag_lpf;		///< filtered magnetometer measurement (Gauss)
 	Vector3f _delVel_sum;			///< summed delta velocity (m/sec)
-	float _hgt_sensor_offset{0.0f};		///< set as necessary if desired to maintain the same height after a height reset (m)
-	float _baro_hgt_offset{0.0f};		///< baro height reading at the local NED origin (m)
+	float _hgt_sensor_offset{0.0f};		///< set as necessary if desired to maintain the same height after a height reset (m)  TODO: is this necessary
+	float _baro_hgt_offset{0.0f};
+
+	// height references			height_meas = height - height_reference
+	// The filter objects are storing and filtering the reference height
+	LowPassFilterWithLimits _baro_ref_hgt{};		///< baro reference height (m)
+	LowPassFilterWithLimits _gps_ref_hgt{};		///< gps reference height (m)
+	LowPassFilterWithLimits _rng_ref_hgt{};		///< range sensor reference height (m)
+	LowPassFilterWithLimits _ev_ref_hgt{};		///< external vision reference height (m)
+
+	// time constants for height offset estimation (s)
+	// the bigger the time constant the slower the reference height will change
+	const float _baro_ref_hgt_timeConst{10};
+	const float _gps_ref_hgt_timeConst{10};
+	const float _rng_ref_hgt_timeConst{10};
+	const float _ev_ref_hgt_timeConst{10};
+
+	// Limits to the input magnitude of the reference height filter (m)
+	const float _baro_ref_hgt_spike_limit{5.5f};
+	const float _gps_ref_hgt_spike_limit{1.0f};
+	const float _rng_ref_hgt_spike_limit{0.5f};
+	const float _ev_ref_hgt_spike_limit{0.5f};
+
+	// Limit filter state to plus and minus this range w.r.t. to the inital value (m)
+	const float _gps_ref_hgt_range{5.0f};
+
+	bool _set_rest_position{true};
+	Vector3f _rest_position{};
 
 	// Variables used to control activation of post takeoff functionality
 	float _last_on_ground_posD{0.0f};	///< last vertical position when the in_air status was false (m)
@@ -506,7 +552,6 @@ private:
 	bool _baro_hgt_faulty{false};		///< true if valid baro data is unavailable for use
 	bool _gps_hgt_intermittent{false};	///< true if gps height into the buffer is intermittent
 	bool _rng_hgt_valid{false};		///< true if range finder sample retrieved from buffer is valid
-	int _primary_hgt_source{VDIST_SENSOR_BARO};	///< specifies primary source of height data
 	uint64_t _time_bad_rng_signal_quality{0};	///< timestamp at which range finder signal quality was 0 (used for hysteresis)
 
 	// imu fault status
@@ -792,7 +837,7 @@ private:
 	void resetWindStates();
 
 	// check that the range finder data is continuous
-	void updateRangeDataContinuity();
+	void updateRangeDataTimeContinuity();
 
 	bool isRangeDataContinuous() { return _dt_last_range_update_filt_us < 2e6f; }
 

@@ -208,7 +208,7 @@ void EstimatorInterface::setGpsData(uint64_t time_usec, const gps_message &gps)
 	}
 
 	// limit data rate to prevent data being lost
-	bool need_gps = (_params.fusion_mode & MASK_USE_GPS) || (_params.vdist_sensor_type == VDIST_SENSOR_GPS);
+	bool need_gps = (_params.fusion_mode & MASK_USE_GPS) || (_params.fusion_hgt_mode & MASK_HGT_GPS);
 
 	if (((time_usec - _time_last_gps) > _min_obs_interval_us) && need_gps && gps.fix_type > 2) {
 		gpsSample gps_sample_new;

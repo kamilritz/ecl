@@ -219,169 +219,169 @@ bool Ekf::resetPosition()
 	return true;
 }
 
-// Reset height state using the last height measurement
-void Ekf::resetHeight()
-{
-	// Get the most recent GPS data
-	const gpsSample &gps_newest = _gps_buffer.get_newest();
+// // Reset height state using the last height measurement
+// void Ekf::resetHeight()
+// {
+// 	// Get the most recent GPS data
+// 	const gpsSample &gps_newest = _gps_buffer.get_newest();
 
-	// store the current vertical position and velocity for reference so we can calculate and publish the reset amount
-	float old_vert_pos = _state.pos(2);
-	bool vert_pos_reset = false;
-	float old_vert_vel = _state.vel(2);
-	bool vert_vel_reset = false;
+// 	// store the current vertical position and velocity for reference so we can calculate and publish the reset amount
+// 	float old_vert_pos = _state.pos(2);
+// 	bool vert_pos_reset = false;
+// 	float old_vert_vel = _state.vel(2);
+// 	bool vert_vel_reset = false;
 
-	// reset the vertical position
-	if (_control_status.flags.rng_hgt) {
+// 	// reset the vertical position
+// 	if (_control_status.flags.rng_hgt) {
 
-			float new_pos_down = _hgt_sensor_offset - _range_sample_delayed.rng * _R_rng_to_earth_2_2;
+// 			float new_pos_down = _hgt_sensor_offset - _range_sample_delayed.rng * _R_rng_to_earth_2_2;
 
-			// update the state and associated variance
-			_state.pos(2) = new_pos_down;
+// 			// update the state and associated variance
+// 			_state.pos(2) = new_pos_down;
 
-			// reset the associated covariance values
-			zeroRows(P, 9, 9);
-			zeroCols(P, 9, 9);
+// 			// reset the associated covariance values
+// 			zeroRows(P, 9, 9);
+// 			zeroCols(P, 9, 9);
 
-			// the state variance is the same as the observation
-			P[9][9] = sq(_params.range_noise);
+// 			// the state variance is the same as the observation
+// 			P[9][9] = sq(_params.range_noise);
 
-			vert_pos_reset = true;
+// 			vert_pos_reset = true;
 
-			// reset the baro offset which is subtracted from the baro reading if we need to use it as a backup
-			const baroSample &baro_newest = _baro_buffer.get_newest();
-			_baro_hgt_offset = baro_newest.hgt + _state.pos(2);
+// 			// reset the baro offset which is subtracted from the baro reading if we need to use it as a backup
+// 			const baroSample &baro_newest = _baro_buffer.get_newest();
+// 			_baro_hgt_offset = baro_newest.hgt + _state.pos(2);
 
-	} else if (_control_status.flags.baro_hgt) {
-		// initialize vertical position with newest baro measurement
-		const baroSample &baro_newest = _baro_buffer.get_newest();
+// 	} else if (_control_status.flags.baro_hgt) {
+// 		// initialize vertical position with newest baro measurement
+// 		const baroSample &baro_newest = _baro_buffer.get_newest();
 
-		if (_time_last_imu - baro_newest.time_us < 2 * BARO_MAX_INTERVAL) {
-			_state.pos(2) = _hgt_sensor_offset - baro_newest.hgt + _baro_hgt_offset;
+// 		if (_time_last_imu - baro_newest.time_us < 2 * BARO_MAX_INTERVAL) {
+// 			_state.pos(2) = _hgt_sensor_offset - baro_newest.hgt + _baro_hgt_offset;
 
-			// reset the associated covariance values
-			zeroRows(P, 9, 9);
-			zeroCols(P, 9, 9);
+// 			// reset the associated covariance values
+// 			zeroRows(P, 9, 9);
+// 			zeroCols(P, 9, 9);
 
-			// the state variance is the same as the observation
-			P[9][9] = sq(_params.baro_noise);
+// 			// the state variance is the same as the observation
+// 			P[9][9] = sq(_params.baro_noise);
 
-			vert_pos_reset = true;
+// 			vert_pos_reset = true;
 
-		} else {
-			// TODO: reset to last known baro based estimate
-		}
+// 		} else {
+// 			// TODO: reset to last known baro based estimate
+// 		}
 
-	} else if (_control_status.flags.gps_hgt) {
-		// initialize vertical position and velocity with newest gps measurement
-		if (_time_last_imu - gps_newest.time_us < 2 * GPS_MAX_INTERVAL) {
-			_state.pos(2) = _hgt_sensor_offset - gps_newest.hgt + _gps_alt_ref;
+// 	} else if (_control_status.flags.gps_hgt) {
+// 		// initialize vertical position and velocity with newest gps measurement
+// 		if (_time_last_imu - gps_newest.time_us < 2 * GPS_MAX_INTERVAL) {
+// 			_state.pos(2) = _hgt_sensor_offset - gps_newest.hgt + _gps_alt_ref;
 
-			// reset the associated covariance values
-			zeroRows(P, 9, 9);
-			zeroCols(P, 9, 9);
+// 			// reset the associated covariance values
+// 			zeroRows(P, 9, 9);
+// 			zeroCols(P, 9, 9);
 
-			// the state variance is the same as the observation
-			P[9][9] = sq(gps_newest.hacc);
+// 			// the state variance is the same as the observation
+// 			P[9][9] = sq(gps_newest.hacc);
 
-			vert_pos_reset = true;
+// 			vert_pos_reset = true;
 
-			// reset the baro offset which is subtracted from the baro reading if we need to use it as a backup
-			const baroSample &baro_newest = _baro_buffer.get_newest();
-			_baro_hgt_offset = baro_newest.hgt + _state.pos(2);
+// 			// reset the baro offset which is subtracted from the baro reading if we need to use it as a backup
+// 			const baroSample &baro_newest = _baro_buffer.get_newest();
+// 			_baro_hgt_offset = baro_newest.hgt + _state.pos(2);
 
-		} else {
-			// TODO: reset to last known gps based estimate
-		}
+// 		} else {
+// 			// TODO: reset to last known gps based estimate
+// 		}
 
-	} else if (_control_status.flags.ev_hgt) {
-		// initialize vertical position with newest measurement
-		const extVisionSample &ev_newest = _ext_vision_buffer.get_newest();
+// 	} else if (_control_status.flags.ev_hgt) {
+// 		// initialize vertical position with newest measurement
+// 		const extVisionSample &ev_newest = _ext_vision_buffer.get_newest();
 
-		// use the most recent data if it's time offset from the fusion time horizon is smaller
-		int32_t dt_newest = ev_newest.time_us - _imu_sample_delayed.time_us;
-		int32_t dt_delayed = _ev_sample_delayed.time_us - _imu_sample_delayed.time_us;
+// 		// use the most recent data if it's time offset from the fusion time horizon is smaller
+// 		int32_t dt_newest = ev_newest.time_us - _imu_sample_delayed.time_us;
+// 		int32_t dt_delayed = _ev_sample_delayed.time_us - _imu_sample_delayed.time_us;
 
-		vert_pos_reset = true;
+// 		vert_pos_reset = true;
 
-		if (std::abs(dt_newest) < std::abs(dt_delayed)) {
-			_state.pos(2) = ev_newest.pos(2);
+// 		if (std::abs(dt_newest) < std::abs(dt_delayed)) {
+// 			_state.pos(2) = ev_newest.pos(2);
 
-		} else {
-			_state.pos(2) = _ev_sample_delayed.pos(2);
-		}
+// 		} else {
+// 			_state.pos(2) = _ev_sample_delayed.pos(2);
+// 		}
 
-	}
+// 	}
 
-	// reset the vertical velocity covariance values
-	zeroRows(P, 6, 6);
-	zeroCols(P, 6, 6);
+// 	// reset the vertical velocity covariance values
+// 	zeroRows(P, 6, 6);
+// 	zeroCols(P, 6, 6);
 
-	// reset the vertical velocity state
-	if (_control_status.flags.gps && (_time_last_imu - gps_newest.time_us < 2 * GPS_MAX_INTERVAL)) {
-		// If we are using GPS, then use it to reset the vertical velocity
-		_state.vel(2) = gps_newest.vel(2);
+// 	// reset the vertical velocity state
+// 	if (_control_status.flags.gps && (_time_last_imu - gps_newest.time_us < 2 * GPS_MAX_INTERVAL)) {
+// 		// If we are using GPS, then use it to reset the vertical velocity
+// 		_state.vel(2) = gps_newest.vel(2);
 
-		// the state variance is the same as the observation
-		P[6][6] = sq(1.5f * gps_newest.sacc);
+// 		// the state variance is the same as the observation
+// 		P[6][6] = sq(1.5f * gps_newest.sacc);
 
-	} else {
-		// we don't know what the vertical velocity is, so set it to zero
-		_state.vel(2) = 0.0f;
+// 	} else {
+// 		// we don't know what the vertical velocity is, so set it to zero
+// 		_state.vel(2) = 0.0f;
 
-		// Set the variance to a value large enough to allow the state to converge quickly
-		// that does not destabilise the filter
-		P[6][6] = 10.0f;
+// 		// Set the variance to a value large enough to allow the state to converge quickly
+// 		// that does not destabilise the filter
+// 		P[6][6] = 10.0f;
 
-	}
+// 	}
 
-	vert_vel_reset = true;
+// 	vert_vel_reset = true;
 
-	// store the reset amount and time to be published
-	if (vert_pos_reset) {
-		_state_reset_status.posD_change = _state.pos(2) - old_vert_pos;
-		_state_reset_status.posD_counter++;
-	}
+// 	// store the reset amount and time to be published
+// 	if (vert_pos_reset) {
+// 		_state_reset_status.posD_change = _state.pos(2) - old_vert_pos;
+// 		_state_reset_status.posD_counter++;
+// 	}
 
-	if (vert_vel_reset) {
-		_state_reset_status.velD_change = _state.vel(2) - old_vert_vel;
-		_state_reset_status.velD_counter++;
-	}
+// 	if (vert_vel_reset) {
+// 		_state_reset_status.velD_change = _state.vel(2) - old_vert_vel;
+// 		_state_reset_status.velD_counter++;
+// 	}
 
-	// apply the change in height / height rate to our newest height / height rate estimate
-	// which have already been taken out from the output buffer
-	if (vert_pos_reset) {
-		_output_new.pos(2) += _state_reset_status.posD_change;
-	}
+// 	// apply the change in height / height rate to our newest height / height rate estimate
+// 	// which have already been taken out from the output buffer
+// 	if (vert_pos_reset) {
+// 		_output_new.pos(2) += _state_reset_status.posD_change;
+// 	}
 
-	if (vert_vel_reset) {
-		_output_new.vel(2) += _state_reset_status.velD_change;
-	}
+// 	if (vert_vel_reset) {
+// 		_output_new.vel(2) += _state_reset_status.velD_change;
+// 	}
 
-	// add the reset amount to the output observer buffered data
-	for (uint8_t i = 0; i < _output_buffer.get_length(); i++) {
-		if (vert_pos_reset) {
-			_output_buffer[i].pos(2) += _state_reset_status.posD_change;
-			_output_vert_buffer[i].vel_d_integ += _state_reset_status.posD_change;
-		}
+// 	// add the reset amount to the output observer buffered data
+// 	for (uint8_t i = 0; i < _output_buffer.get_length(); i++) {
+// 		if (vert_pos_reset) {
+// 			_output_buffer[i].pos(2) += _state_reset_status.posD_change;
+// 			_output_vert_buffer[i].vel_d_integ += _state_reset_status.posD_change;
+// 		}
 
-		if (vert_vel_reset) {
-			_output_buffer[i].vel(2) += _state_reset_status.velD_change;
-			_output_vert_buffer[i].vel_d += _state_reset_status.velD_change;
-		}
-	}
+// 		if (vert_vel_reset) {
+// 			_output_buffer[i].vel(2) += _state_reset_status.velD_change;
+// 			_output_vert_buffer[i].vel_d += _state_reset_status.velD_change;
+// 		}
+// 	}
 
-	// add the reset amount to the output observer vertical position state
-	if (vert_pos_reset) {
-		_output_vert_delayed.vel_d_integ = _state.pos(2);
-		_output_vert_new.vel_d_integ = _state.pos(2);
-	}
+// 	// add the reset amount to the output observer vertical position state
+// 	if (vert_pos_reset) {
+// 		_output_vert_delayed.vel_d_integ = _state.pos(2);
+// 		_output_vert_new.vel_d_integ = _state.pos(2);
+// 	}
 
-	if (vert_vel_reset) {
-		_output_vert_delayed.vel_d = _state.vel(2);
-		_output_vert_new.vel_d = _state.vel(2);
-	}
-}
+// 	if (vert_vel_reset) {
+// 		_output_vert_delayed.vel_d = _state.vel(2);
+// 		_output_vert_new.vel_d = _state.vel(2);
+// 	}
+// }
 
 // align output filter states to match EKF states at the fusion time horizon
 void Ekf::alignOutputFilter()
@@ -833,6 +833,34 @@ void Ekf::calcEarthRateNED(Vector3f &omega, float lat_rad) const
 	omega(2) = -CONSTANTS_EARTH_SPIN_RATE * sinf(lat_rad);
 }
 
+void Ekf::getFakeVelPosInnov(float hvel[2], float &vvel, float hpos[2],  float &vpos)
+{
+	hvel[0] = _fake_vel_innov(0);
+	hvel[1] = _fake_vel_innov(1);
+	vvel    = _fake_vel_innov(2);
+	hpos[0] = _fake_pos_innov(0);
+	hpos[1] = _fake_pos_innov(1);
+	vpos    = _fake_pos_innov(2);
+}
+
+void Ekf::getFakeVelPosInnovVar(float hvel[2], float &vvel, float hpos[2], float &vpos)
+{
+	hvel[0] = _fake_vel_innov_var(0);
+	hvel[1] = _fake_vel_innov_var(1);
+	vvel    = _fake_vel_innov_var(2);
+	hpos[0] = _fake_pos_innov_var(0);
+	hpos[1] = _fake_pos_innov_var(1);
+	vpos    = _fake_pos_innov_var(2);
+}
+
+void Ekf::getFakeVelPosInnovRatio(float &hvel, float &vvel, float &hpos, float &vpos)
+{
+	hvel = _fake_vel_test_ratio(0);
+	vvel = _fake_vel_test_ratio(1);
+	hpos = _fake_pos_test_ratio(0);
+	vpos = _fake_pos_test_ratio(1);
+}
+
 void Ekf::getGpsVelPosInnov(float hvel[2], float &vvel, float hpos[2],  float &vpos)
 {
 	hvel[0] = _gps_vel_innov(0);
@@ -1111,6 +1139,26 @@ bool Ekf::get_ekf_origin(uint64_t *origin_time, map_projection_reference_s *orig
 	memcpy(origin_pos, &_pos_ref, sizeof(map_projection_reference_s));
 	memcpy(origin_alt, &_gps_alt_ref, sizeof(float));
 	return _NED_origin_initialised;
+}
+
+float Ekf::getBaroRefHgt()
+{
+	return _baro_ref_hgt.getValue();
+}
+
+float Ekf::getGpsRefHgt()
+{
+	return _gps_ref_hgt.getValue();
+}
+
+float Ekf::getRangeRefHgt()
+{
+	return _rng_ref_hgt.getValue();
+}
+
+float Ekf::getEvRefHgt()
+{
+	return _ev_ref_hgt.getValue();
 }
 
 // return an array containing the output predictor angular, velocity and position tracking
@@ -1473,7 +1521,7 @@ bool Ekf::global_position_is_valid()
 {
 	// return true if the origin is set we are not doing unconstrained free inertial navigation
 	// and have not started using synthetic position observations to constrain drift
-	return (_NED_origin_initialised && !_deadreckon_time_exceeded && !_using_synthetic_position);
+	return (_NED_origin_initialised && !_deadreckon_time_exceeded);
 }
 
 // return true if we are totally reliant on inertial dead-reckoning for position

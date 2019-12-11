@@ -135,7 +135,9 @@ void Ekf::fuseHagl()
 	// If the vehicle is excessively tilted, do not try to fuse range finder observations
 	if (_R_rng_to_earth_2_2 > _params.range_cos_max_tilt) {
 		// get a height above ground measurement from the range finder assuming a flat earth
-		float meas_hagl = _range_sample_delayed.rng * _R_rng_to_earth_2_2;
+		Vector3f pos_offset_body = _params.rng_pos_body - _params.imu_pos_body;
+		Vector3f pos_offset_earth = _R_to_earth * pos_offset_body;
+		float meas_hagl = _range_sample_delayed.rng * _R_rng_to_earth_2_2 + pos_offset_earth(2);
 
 		// predict the hagl from the vehicle position and terrain height
 		float pred_hagl = _terrain_vpos - _state.pos(2);

@@ -41,7 +41,7 @@
 #include "ekf.h"
 
 // check that the range finder data is continuous
-void Ekf::updateRangeDataContinuity()
+void Ekf::updateRangeDataTimeContinuity()
 {
 	// update range data continuous flag (1Hz ie 2000 ms)
 	/* Timing in micro seconds */
@@ -56,7 +56,7 @@ void Ekf::updateRangeDataContinuity()
 
 void Ekf::updateRangeDataValidity()
 {
-	updateRangeDataContinuity();
+	updateRangeDataTimeContinuity();
 
 	// check if out of date
 	if ((_imu_sample_delayed.time_us - _range_sample_delayed.time_us) > 2 * RNG_MAX_INTERVAL) {
@@ -135,5 +135,34 @@ void Ekf::updateRangeDataStuck()
 
 	} else {
 		_time_last_rng_ready = _range_sample_delayed.time_us;
+	}
+}
+
+void Ekf::checkRangeAidSuitability()
+{
+	const bool horz_vel_valid = _control_status.flags.gps
+				    || _control_status.flags.ev_pos
+				    || _control_status.flags.ev_vel
+				    || _control_status.flags.opt_flow;
+
+
+	if (_control_status.flags.in_air
+	    && _rng_hgt_valid
+	    && horz_vel_valid) {
+		// check if we can use range finder measurements to estimate height, use hysteresis to avoid rapid switching
+		// Note that the 0.7 coefficients and the innovation check are arbitrary values but work well in practice
+		const bool is_in_range = _is_range_aid_suitable
+					 ? (_terrain_vpos - _state.pos(2) < _params.max_hagl_for_range_aid)
+					 : (_terrain_vpos - _state.pos(2) < _params.max_hagl_for_range_aid * 0.7f);
+
+		const float ground_vel = sqrtf(_state.vel(0) * _state.vel(0) + _state.vel(1) * _state.vel(1));
+		const bool is_below_max_speed = _is_range_aid_suitable
+						? ground_vel < _params.max_vel_for_range_aid
+						: ground_vel < _params.max_vel_for_range_aid * 0.7f;
+
+		_is_range_aid_suitable = is_in_range && is_below_max_speed;
+
+	} else {
+		_is_range_aid_suitable = false;
 	}
 }
