@@ -1,0 +1,23 @@
+name: Firmware Build Test
+
+on: [push]
+
+jobs:
+  Firmware-build:
+    runs-on: ubuntu-latest
+    container: px4io/px4-dev-base-bionic:2020-01-13
+    env:
+      GIT_COMMITTER_EMAIL: bot@px4.io
+      GIT_COMMITTER_NAME: PX4BuildBot
+      PX4_FIRMWARE_TEST_BRANCH: ecl_${{github.ref}}
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get Firmware master
+      run: make clean #TODO
+    - name: Configure Firmware to include current ECL version
+      run: make clean #TODO
+    - name: Build Firmware
+      run: make clean #TODO
+    - name: Commit and push Firmware with ECL changes
+      run: make clean #TODO
+
