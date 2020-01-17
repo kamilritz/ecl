@@ -14,9 +14,9 @@ jobs:
         ref: master
         submodules: recurvise
     - name: Configure Firmware to include current ECL version
-      working-directory: ../Firmware/src/lib/ecl #TODO
-      run: git checkout ${{ github.ref }}
-    - name: Configure Firmware to include current ECL version
-      working-directory: ../Firmware #TODO
+      working-directory: ../Firmware/src/lib/ecl
+      run: git checkout ${{ github.sha }}
+    - name: Build Firmware
+      working-directory: ../Firmware
       run: make
 
