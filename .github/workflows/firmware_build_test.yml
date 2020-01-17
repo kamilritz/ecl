@@ -13,46 +13,10 @@ jobs:
         repository: PX4/Firmware
         ref: master
         submodules: recurvise
-    # - name: check_format
-    #   env:
-    #     CI: true
-    #   run: make check_format
-    # - name: main tests
-    #   run: make tests
-    # - name: Checkout submodules
-    #   shell: bash
-    #   run: |
-    #     git submodule sync --recursive
-    #     git submodule update --init --force --recursive
-    - run: echo ${{github.repository}}
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Dump job context
-      env:
-        JOB_CONTEXT: ${{ toJson(job) }}
-      run: echo "$JOB_CONTEXT"
-    - name: Dump steps context
-      env:
-        STEPS_CONTEXT: ${{ toJson(steps) }}
-      run: echo "$STEPS_CONTEXT"
-    - name: Dump runner context
-      env:
-        RUNNER_CONTEXT: ${{ toJson(runner) }}
-      run: echo "$RUNNER_CONTEXT"
-    - name: Dump strategy context
-      env:
-        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-      run: echo "$STRATEGY_CONTEXT"
-    - name: Dump matrix context
-      env:
-        MATRIX_CONTEXT: ${{ toJson(matrix) }}
-      run: echo "$MATRIX_CONTEXT"
-    - run: echo ${{ github.workspace }}
+    - name: Configure Firmware to include current ECL version
+      working-directory: ../Firmware/src/lib/ecl #TODO
+      run: git checkout ${{ github.ref }}
     - name: Configure Firmware to include current ECL version
       working-directory: ../Firmware #TODO
       run: make
-      # with:
-      #   repository: PX4/Firmware
 
