@@ -8,7 +8,7 @@ jobs:
     container: px4io/px4-dev-base-bionic:2020-01-13
     steps:
     - name: Checkout Firmware master
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1
       with:
         repository: PX4/Firmware
         ref: master
