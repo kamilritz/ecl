@@ -51,7 +51,8 @@ jobs:
       run: echo "$MATRIX_CONTEXT"
     - run: echo ${{ github.workspace }}
     - name: Configure Firmware to include current ECL version
-      run: ls -la ../Firmware #TODO
+      working-directory: ../Firmware #TODO
+      run: make
       # with:
       #   repository: PX4/Firmware
 
