@@ -13,6 +13,7 @@ jobs:
         repository: PX4/Firmware
         ref: master
         path: Firmware
+        submodules: recurvise
     # - name: check_format
     #   env:
     #     CI: true
@@ -26,5 +27,5 @@ jobs:
     #     git submodule update --init --force --recursive
     - name: Configure Firmware to include current ECL version
       run: ls #TODO
-      working-directory: ./Firmware
+      working-directory: Firmware
 
