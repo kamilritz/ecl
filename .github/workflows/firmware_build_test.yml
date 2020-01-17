@@ -25,7 +25,10 @@ jobs:
     #   run: |
     #     git submodule sync --recursive
     #     git submodule update --init --force --recursive
+    - run: echo ${{github.repository}}
     - name: Configure Firmware to include current ECL version
       run: make #TODO
+      with:
+        repository: PX4/Firmware
       # working-directory: Firmware
 
