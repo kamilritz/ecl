@@ -8,10 +8,11 @@ jobs:
     container: px4io/px4-dev-base-bionic:2020-01-13
     steps:
     - name: Checkout Firmware master
-      uses: actions/checkout@master
+      uses: actions/checkout@v2
       with:
         repository: PX4/Firmware
         submodules: true
+        ref: master
     - name: check_format
       env:
         CI: true
