@@ -12,18 +12,18 @@ jobs:
       with:
         repository: PX4/Firmware
         ref: master
-    - name: check_format
-      env:
-        CI: true
-      run: make check_format
-    - name: main tests
-      run: make tests
-    # - name: Checkout submodules
-    #   shell: bash
-    #   run: |
-    #     auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-    #     git submodule sync --recursive
-    #     git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive
+    # - name: check_format
+    #   env:
+    #     CI: true
+    #   run: make check_format
+    # - name: main tests
+    #   run: make tests
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive
     # - name: Configure Firmware to include current ECL version
     #   run: make px4_fmu-v5_default #TODO
 
