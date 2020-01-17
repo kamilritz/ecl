@@ -11,11 +11,12 @@ jobs:
       GIT_COMMITTER_NAME: PX4BuildBot
       PX4_FIRMWARE_TEST_BRANCH: ecl_${{github.ref}}
     steps:
-    - uses: actions/checkout@master
+    - name: Checkout Firmware master
+      uses: actions/checkout@master
       with:
         repository: PX4/Firmware
     - name: Configure Firmware to include current ECL version
-      run: git status #TODO
+      run: make #TODO
     - name: Build Firmware
       run: ls #TODO
     - name: Commit and push Firmware with ECL changes
