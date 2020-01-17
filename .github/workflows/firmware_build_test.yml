@@ -18,11 +18,11 @@ jobs:
     #   run: make check_format
     # - name: main tests
     #   run: make tests
-    - name: Checkout submodules
-      shell: bash
-      run: |
-        git submodule sync --recursive
-        git submodule update --init --force --recursive
-    # - name: Configure Firmware to include current ECL version
-    #   run: make px4_fmu-v5_default #TODO
+    # - name: Checkout submodules
+    #   shell: bash
+    #   run: |
+    #     git submodule sync --recursive
+    #     git submodule update --init --force --recursive
+    - name: Configure Firmware to include current ECL version
+      run: make #TODO
 
