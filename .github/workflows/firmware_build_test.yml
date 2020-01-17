@@ -15,7 +15,7 @@ jobs:
       with:
         name: PX4/Firmware
     - name: Configure Firmware to include current ECL version
-      run: make #TODO
+      run: make px4_fmu-v5_default #TODO
     - name: Build Firmware
       run: make clean #TODO
     - name: Commit and push Firmware with ECL changes
