@@ -11,7 +11,7 @@ jobs:
       uses: actions/checkout@master
       with:
         repository: PX4/Firmware
-        path: Firmware
+        submodules: true
     - name: check_format
       env:
         CI: true
