@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
       with:
-        name: PX4/Firmware
+        repository: PX4/Firmware
     - name: Configure Firmware to include current ECL version
       run: git status #TODO
     - name: Build Firmware
