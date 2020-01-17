@@ -15,6 +15,7 @@ jobs:
       uses: actions/checkout@master
       with:
         repository: PX4/Firmware
+        token: ${{ secrets.ACCESS_TOKEN }}
     - name: Checkout submodules
       shell: bash
       run: |
