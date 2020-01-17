@@ -26,6 +26,6 @@ jobs:
     #     git submodule sync --recursive
     #     git submodule update --init --force --recursive
     - name: Configure Firmware to include current ECL version
-      run: ls #TODO
-      working-directory: Firmware
+      run: make #TODO
+      # working-directory: Firmware
 
