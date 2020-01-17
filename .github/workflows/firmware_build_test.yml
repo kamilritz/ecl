@@ -12,7 +12,7 @@ jobs:
       with:
         repository: PX4/Firmware
         ref: master
-        path: Firmware
+        path: /home/runner/work/Firmware
         submodules: recurvise
     # - name: check_format
     #   env:
@@ -50,9 +50,9 @@ jobs:
       env:
         MATRIX_CONTEXT: ${{ toJson(matrix) }}
       run: echo "$MATRIX_CONTEXT"
-    # - name: Configure Firmware to include current ECL version
-    #   run: make #TODO
+    - name: Configure Firmware to include current ECL version
+      run: make #TODO
       # with:
       #   repository: PX4/Firmware
-      # working-directory: Firmware
+      working-directory: /home/runner/work/Firmware
 
