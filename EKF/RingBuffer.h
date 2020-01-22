@@ -37,16 +37,14 @@
  * Template RingBuffer.
  */
 
+#include <inttypes.h>
 #include <cstdio>
 #include <cstring>
-#include <inttypes.h>
 
 template <typename data_type>
-class RingBuffer
-{
-    public:
-	RingBuffer()
-	{
+class RingBuffer {
+public:
+	RingBuffer() {
 		if (allocate(1)) {
 			// initialize with one empty sample
 			data_type d = {};
@@ -61,8 +59,7 @@ class RingBuffer
 	RingBuffer(RingBuffer &&) = delete;
 	RingBuffer &operator=(RingBuffer &&) = delete;
 
-	bool allocate(uint8_t size)
-	{
+	bool allocate(uint8_t size) {
 		if (_buffer != nullptr) {
 			delete[] _buffer;
 		}
@@ -78,7 +75,8 @@ class RingBuffer
 		_head = 0;
 		_tail = 0;
 
-		// set the time elements to zero so that bad data is not retrieved from the buffers
+		// set the time elements to zero so that bad data is not retrieved from
+		// the buffers
 		for (uint8_t index = 0; index < _size; index++) {
 			_buffer[index] = {};
 		}
@@ -88,14 +86,12 @@ class RingBuffer
 		return true;
 	}
 
-	void unallocate()
-	{
+	void unallocate() {
 		delete[] _buffer;
 		_buffer = nullptr;
 	}
 
-	void push(const data_type &sample)
-	{
+	void push(const data_type &sample) {
 		uint8_t head_new = _head;
 
 		if (!_first_write) {
@@ -123,19 +119,19 @@ class RingBuffer
 
 	uint8_t get_oldest_index() const { return _tail; }
 
-	bool pop_first_older_than(const uint64_t &timestamp, data_type *sample)
-	{
+	bool pop_first_older_than(const uint64_t &timestamp, data_type *sample) {
 		// start looking from newest observation data
 		for (uint8_t i = 0; i < _size; i++) {
 			int index = (_head - i);
 			index = index < 0 ? _size + index : index;
 
-			if (timestamp >= _buffer[index].time_us && timestamp - _buffer[index].time_us < (uint64_t)1e5) {
-
+			if (timestamp >= _buffer[index].time_us &&
+				timestamp - _buffer[index].time_us < (uint64_t)1e5) {
 				*sample = _buffer[index];
 
-				// Now we can set the tail to the item which comes after the one we removed
-				// since we don't want to have any older data in the buffer
+				// Now we can set the tail to the item which comes after the one
+				// we removed since we don't want to have any older data in the
+				// buffer
 				if (index == _head) {
 					_tail = _head;
 					_first_write = true;
@@ -160,7 +156,7 @@ class RingBuffer
 
 	int get_total_size() { return sizeof(*this) + sizeof(data_type) * _size; }
 
-    private:
+private:
 	data_type *_buffer{nullptr};
 
 	uint8_t _head{0};
