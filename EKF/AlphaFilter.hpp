@@ -45,7 +45,9 @@ class AlphaFilter final
 	AlphaFilter() = default;
 	~AlphaFilter() = default;
 
-	void reset(const T &val) { _x = val; }
+	void reset(const T &val) {
+		 _x = val;
+		 }
 
 	void update(const T &input, float tau, float dt)
 	{
