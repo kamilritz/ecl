@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   format_checks:
     runs-on: ubuntu-latest
-    container: px4io/px4-dev-base-clang:2019-10-24
+    container: px4io/px4-dev-clang:2019-10-24
     steps:
     - uses: actions/checkout@v1
     - name: check_format
