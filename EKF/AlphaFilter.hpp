@@ -38,10 +38,10 @@
 
 #pragma once
 
-template<typename T>
+template <typename T>
 class AlphaFilter final
 {
-public:
+    public:
 	AlphaFilter() = default;
 	~AlphaFilter() = default;
 
@@ -49,23 +49,17 @@ public:
 
 	void update(const T &input, float tau, float dt)
 	{
-		const float alpha = dt / tau; 
+		const float alpha = dt / tau;
 		update(input, alpha);
 	}
 
-	void update(const T &input, float alpha)
-	{
-		_x = (1.f - alpha) * _x + alpha * input;
-	}
+	void update(const T &input, float alpha) { _x = (1.f - alpha) * _x + alpha * input; }
 
 	// Typical 0.9/0.1 lowpass filter
-	void update(const T &input)
-	{
-		update(input, 0.1f);
-	}
+	void update(const T &input) { update(input, 0.1f); }
 
-	const T& getState() const { return _x; }
+	const T &getState() const { return _x; }
 
-private:
+    private:
 	T _x{}; ///< current state of the filter
 };

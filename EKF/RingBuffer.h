@@ -37,14 +37,14 @@
  * Template RingBuffer.
  */
 
-#include <inttypes.h>
 #include <cstdio>
 #include <cstring>
+#include <inttypes.h>
 
 template <typename data_type>
 class RingBuffer
 {
-public:
+    public:
 	RingBuffer()
 	{
 		if (allocate(1)) {
@@ -160,7 +160,7 @@ public:
 
 	int get_total_size() { return sizeof(*this) + sizeof(data_type) * _size; }
 
-private:
+    private:
 	data_type *_buffer{nullptr};
 
 	uint8_t _head{0};
