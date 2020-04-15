@@ -108,11 +108,13 @@ TEST_F(EkfExternalVisionTest, visionVelocityReset)
 	_sensor_simulator._vio.setVelocity(simulated_velocity);
 	_ekf_wrapper.enableExternalVisionVelocityFusion();
 	_sensor_simulator.startExternalVision();
-	_sensor_simulator.runMicroseconds(6e5);
+	// Note: test duration needs to allow time for tilt alignment to complete
+	_sensor_simulator.runMicroseconds(1e6);
 
 	// THEN: a reset to Vision velocity should be done
+	// Note: velocity will drift after reset due to INAV errors so the tolerance needs to allow for this
 	const Vector3f estimated_velocity = _ekf->getVelocity();
-	EXPECT_TRUE(isEqual(estimated_velocity, simulated_velocity, 1e-5f));
+	EXPECT_TRUE(isEqual(estimated_velocity, simulated_velocity, 0.01f));
 }
 
 TEST_F(EkfExternalVisionTest, visionVelocityResetWithAlignment)
